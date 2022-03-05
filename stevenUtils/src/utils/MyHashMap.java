@@ -14,7 +14,7 @@ import java.util.Set;
  * @Date 2022/3/2
  * @Version 1.0
  **/
-public class MyHashMap<K, V> implements MyMap <K,V> {
+public class MyHashMap<K, V> implements MyMap<K,V> {
 
 
     // private attributes
