@@ -1,6 +1,6 @@
 package utils;
 
-import Interface.MyMap;
+import interfaces.MyMap;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,12 +9,12 @@ import java.util.Set;
 
 /**
  * @ClassName utils.MyHashMap
- * @Description TODO
+ * @Description Self-used HashMap with reversed table
  * @Author Steven
  * @Date 2022/3/2
  * @Version 1.0
  **/
-public class MyHashMap<K, V> implements MyMap<K,V> {
+public class MyHashMap<K, V> implements MyMap <K,V> {
 
 
     // private attributes
@@ -27,8 +27,6 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
     private int entryUseSize; // entry Used size
 
     private Entry<K, V>[] table = null;
-    private Entry<V, K>[] reverseTable = null;
-
 
     /**
      *  Intialize function without parameter
@@ -54,7 +52,6 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
         this.loadFactor = loadFactor;
 
         this.table = new Entry[this.capacity];
-        this.reverseTable = new Entry[this.capacity];
         this.entryUseSize = 0;
 
     }
@@ -88,6 +85,7 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
             Entry<K, V> cur = head;
             while(cur!=null){ // 遍历链表
                 if(key == cur.getKey() || key.equals(cur.getKey())){ // 基本数据类型和object都要判断
+                    // key对上，这个entry需要update
                     prev = cur.getValue();
                     cur.value = value;
                     // size没变，不用加
@@ -104,44 +102,6 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
         return prev;
     }
 
-
-    private K putReverse(K key, V value){
-
-        K prev = null;
-
-        // 判断是否需要扩容
-        if(entryUseSize >= capacity * loadFactor){
-            // 进行扩容
-            resize(2 * capacity);
-        }
-        // 计算hash对应在数组中的index
-        int index = hash(key) % capacity;
-
-        if(reverseTable[index] == null ){ // 如果size没有越界，直接往entry[]里加东西
-            // 直接添加
-            reverseTable[index] = new Entry(key, value, null);
-
-        }else{
-            // 否则往下遍历
-            Entry<V, K> head = reverseTable[index];
-            Entry<V, K> cur = head;
-            while(cur!=null){ // 遍历链表
-                if(value == cur.getKey() || value.equals(cur.getKey())){ // 基本数据类型和object都要判断
-                    prev = cur.getValue();
-                    cur.value = key;
-                    // size没变，不用加
-                    return prev;
-                }
-
-                cur = cur.next;
-            }
-            // 否则说明连表里没有，需要把entry插到bucket里，来个头插法
-            reverseTable[index] = new Entry<V, K>(value, key, head);
-
-        }
-
-        return prev;
-    }
 
     /**
      * 从HashMap中取元素
@@ -186,7 +146,7 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
     @Override
     public boolean containsKey(K key) {
 
-        // calculate hash
+        // calculate hash and get index
         int index = hash(key) % capacity;
 
         // corner case: 如果index在的地方不存在元素
@@ -234,12 +194,28 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
         return set;
     }
 
+    /**
+     * check the hashmap contains certain value without reverseTable in TC=O(n)
+     * @param value 值
+     * @return true if value exists, otherwise false
+     */
     @Override
     public boolean containsValue(V value){
 
         // calculate hash and get index
-        int index = hash(value) % capacity;
-
+        for(Entry<K, V> e : this.table){
+            if(e != null){
+                Entry<K, V> cur = e;
+                // traverse through the entry
+                while(cur != null){
+                    if(value == cur.getValue() || value.equals(cur.getValue())){
+                        return true;
+                    }
+                    cur = cur.next;
+                }
+            }
+        }
+        // otherwise not found value
         return false;
     }
 
@@ -249,7 +225,7 @@ public class MyHashMap<K, V> implements MyMap<K,V> {
 
     /**
      * 用作计算一个key的hash值，key为null的情况会有特殊返回值
-     * @param key key
+     * @param key 键
      * @return key的hash值，如果key为null则返回0
      */
     private int hash(Object key){
