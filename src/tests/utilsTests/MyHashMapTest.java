@@ -64,7 +64,6 @@ public class MyHashMapTest {
 
         System.out.format("[PUT OPERATION] Total time for JavaHashMap: %s ms, with total rounds:%s \n", timeJ, rounds);
 
-
     }
 
     /**
